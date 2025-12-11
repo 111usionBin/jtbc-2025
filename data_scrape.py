@@ -10,10 +10,10 @@ from psycopg2.extras import execute_values
 load_dotenv()
 
 SUPABASE_CONNECTION_STRING = os.getenv("SUPABASE_CONNECTION_STRING")
-GOOGLE_API_KEY = os.getenv("google_cloud_api_key")
+google_cloud_api_key = os.getenv("google_cloud_api_key")
 
 # Initialize YouTube API
-youtube = build("youtube", "v3", developerKey=GOOGLE_API_KEY)
+youtube = build("youtube", "v3", developerKey=google_cloud_api_key)
 
 # Date range
 START_DATE = datetime(2024, 11, 1)
