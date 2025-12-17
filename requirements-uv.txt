@@ -5,3 +5,5 @@ psycopg2-binary
 openai
 pandas
 tqdm
+supabase
+yt-dlp
