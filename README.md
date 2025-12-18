@@ -43,3 +43,10 @@ Execute evaluation:
 ```bash
 python llm-ev.py
 ```
+## System Dependencies (Windows)
+
+This project requires the following system-level dependencies:
+
+```bash
+winget install --id Gyan.FFmpeg -e
+winget install --id OpenJS.NodeJS.LTS -e
