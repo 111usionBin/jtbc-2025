@@ -11,9 +11,9 @@ else:
     load_dotenv()
 
 # 환경 변수 로드
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-OPENAI_PROJECT_ID = os.getenv("OPENAI_PROJECT_ID", "").strip()
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "").strip()
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '').strip()
+OPENAI_PROJECT_ID = os.getenv('OPENAI_PROJECT_ID', '').strip()
+OPENAI_BASE_URL = os.getenv('OPENAI_BASE_URL', '').strip()
 
 print(f"API Key (앞 10자): {OPENAI_API_KEY[:10]}...")
 print(f"Project ID: {OPENAI_PROJECT_ID}")
