@@ -80,11 +80,12 @@ if OPENAI_PROXY:
     USE_HTTPX_TRUST_ENV = True
 
 # httpx 버전에 따라 trust_env 지원 여부 처리
+# 긴 영상(1시간 이상)의 STT 처리를 위해 타임아웃을 6300초(1시간 45분)로 설정
 try:
-    http_client = httpx.Client(timeout=60.0, trust_env=USE_HTTPX_TRUST_ENV)
+    http_client = httpx.Client(timeout=6300.0, trust_env=USE_HTTPX_TRUST_ENV)
 except TypeError:
     # 일부 오래된/특정 버전은 trust_env 인자를 지원하지 않음
-    http_client = httpx.Client(timeout=60.0)
+    http_client = httpx.Client(timeout=6300.0)
 
 openai_client = OpenAI(
     api_key=OPENAI_API_KEY,
@@ -147,8 +148,12 @@ def build_ydl_opts(output_path: str) -> dict:
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
-            'preferredquality': '192',
+            'preferredquality': '32',  # STT 전용으로 32kbps로 설정 (최대 압축)
         }],
+        'postprocessor_args': [
+            '-ar', '8000',   # 샘플레이트 8kHz로 낮춤 (음성 인식에 충분, 파일 크기 최소화)
+            '-ac', '1',      # 모노로 변환 (STT에는 스테레오 불필요)
+        ],
         'outtmpl': output_path,
         'quiet': True,
         'noplaylist': True,
@@ -195,8 +200,63 @@ def download_audio(video_id: str, output_path: str) -> str:
 
     raise RuntimeError(f"오디오 다운로드 실패 ({video_id}): {last_err}")
 
+def split_audio_file(audio_path: str, chunk_duration_minutes: int = 10) -> list:
+    """오디오 파일을 여러 청크로 분할합니다. (pydub 사용)"""
+    try:
+        from pydub import AudioSegment
+    except ImportError:
+        raise RuntimeError("pydub 패키지가 필요합니다. 설치: pip install pydub")
+    
+    audio = AudioSegment.from_mp3(audio_path)
+    chunk_length_ms = chunk_duration_minutes * 60 * 1000  # 분을 밀리초로 변환
+    
+    chunks = []
+    for i in range(0, len(audio), chunk_length_ms):
+        chunk = audio[i:i + chunk_length_ms]
+        chunk_path = f"{audio_path}_chunk_{i//chunk_length_ms}.mp3"
+        chunk.export(chunk_path, format="mp3", bitrate="32k", parameters=["-ar", "8000", "-ac", "1"])
+        chunks.append(chunk_path)
+    
+    return chunks
+
 def transcribe_audio(audio_path: str) -> str:
     """OpenAI Whisper API를 사용하여 오디오를 텍스트로 변환합니다."""
+    # Whisper API는 최대 25MB 파일만 지원
+    file_size_mb = os.path.getsize(audio_path) / (1024 * 1024)
+    
+    # 25MB 초과 시 자동으로 분할 처리
+    if file_size_mb > 25:
+        print(f"  - 파일 크기({file_size_mb:.1f}MB)가 25MB 초과, 자동 분할 처리 중...")
+        chunk_files = split_audio_file(audio_path, chunk_duration_minutes=10)
+        print(f"  - {len(chunk_files)}개 청크로 분할 완료")
+        
+        transcripts = []
+        for idx, chunk_path in enumerate(chunk_files, 1):
+            try:
+                chunk_size_mb = os.path.getsize(chunk_path) / (1024 * 1024)
+                print(f"  - 청크 {idx}/{len(chunk_files)} 처리 중 ({chunk_size_mb:.1f}MB)...")
+                
+                with open(chunk_path, "rb") as audio_file:
+                    transcript = openai_client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        language="ko"
+                    )
+                    transcripts.append(transcript.text)
+            finally:
+                # 청크 파일 삭제
+                if os.path.exists(chunk_path):
+                    os.remove(chunk_path)
+            
+            # 청크 간 짧은 대기
+            if idx < len(chunk_files):
+                time.sleep(1)
+        
+        print(f"  - 모든 청크 처리 완료, 텍스트 결합 중...")
+        return " ".join(transcripts)
+    
+    # 25MB 이하는 일반 처리
+    print(f"  - 파일 크기: {file_size_mb:.1f}MB (직접 처리)")
     with open(audio_path, "rb") as audio_file:
         try:
             transcript = openai_client.audio.transcriptions.create(

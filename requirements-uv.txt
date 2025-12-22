@@ -7,3 +7,4 @@ pandas
 tqdm
 supabase
 yt-dlp
+pydub
