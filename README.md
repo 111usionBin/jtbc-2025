@@ -18,6 +18,7 @@ This project analyzes JTBC News Room's official YouTube channel content by combi
 | `data_scrape.py` | Web scraping for YouTube comments (initial script collection attempted but only comments were collected) |
 | `stt.py` | Script collection using OpenAI API for speech-to-text conversion |
 | `stt_resume.py` | Resume script collection from interruption point (due to bot verification) |
+| `collect_missing_videos.py` | **Collect missing videos and transcripts from specific date range (2025-04-13 ~ 2025-07-10)** |
 | `llm-ev.py` | LLM-based sentiment analysis on collected comments using OpenAI API |
 | `apitest.py` | OpenAI API key testing |
 | `llm-tst.py` | LLM API functionality testing |
@@ -30,9 +31,10 @@ This project analyzes JTBC News Room's official YouTube channel content by combi
 1. **Scrape Comments** → Collect YouTube comments using `data_scrape.py`
 2. **Extract Scripts** → Convert video audio to text using `stt.py` (OpenAI Whisper API)
    - If interrupted by bot verification, resume with `stt_resume.py`
-3. **Store** → Save data to cloud database
-4. **Analyze** → Process sentiment using `llm-ev.py` (OpenAI API)
-5. **Evaluate** → Assess news fairness via LLM analysis
+3. **Collect Missing Videos** → Use `collect_missing_videos.py` to fetch videos from specific date ranges that were missed
+4. **Store** → Save data to cloud database
+5. **Analyze** → Process sentiment using `llm-ev.py` (OpenAI API)
+6. **Evaluate** → Assess news fairness via LLM analysis
 
 ## ⚠️ Known Issues
 
@@ -57,6 +59,9 @@ python stt.py
 
 # Resume if interrupted
 python stt_resume.py
+
+# Collect missing videos from specific date range
+python collect_missing_videos.py
 ```
 
 Execute sentiment analysis:
