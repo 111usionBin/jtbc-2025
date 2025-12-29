@@ -20,6 +20,8 @@ This project analyzes JTBC News Room's official YouTube channel content by combi
 | `stt_resume.py` | Resume script collection from interruption point (due to bot verification) |
 | `collect_missing_videos.py` | **Collect missing videos and transcripts from specific date range (2025-04-13 ~ 2025-07-10)** |
 | `llm-ev.py` | LLM-based sentiment analysis on collected comments using OpenAI API |
+| `ev-run.py` | **Evaluate news transcripts based on criteria in `ev-index.txt` and generate `evaluation_results.csv`** |
+| `ev-index.txt` | **Evaluation criteria for news quality assessment (categories, objectivity, fairness, etc.)** |
 | `apitest.py` | OpenAI API key testing |
 | `llm-tst.py` | LLM API functionality testing |
 | `test_download.py` | Download functionality testing |
@@ -34,7 +36,8 @@ This project analyzes JTBC News Room's official YouTube channel content by combi
 3. **Collect Missing Videos** → Use `collect_missing_videos.py` to fetch videos from specific date ranges that were missed
 4. **Store** → Save data to cloud database
 5. **Analyze** → Process sentiment using `llm-ev.py` (OpenAI API)
-6. **Evaluate** → Assess news fairness via LLM analysis
+6. **Evaluate Transcripts** → Run `ev-run.py` to evaluate news quality based on `ev-index.txt` criteria
+   - Generates `evaluation_results.csv` with scores for each transcript
 
 ## ⚠️ Known Issues
 
@@ -67,6 +70,13 @@ python collect_missing_videos.py
 Execute sentiment analysis:
 ```bash
 python llm-ev.py
+```
+
+Evaluate news transcripts:
+```bash
+# Evaluate transcripts based on ev-index.txt criteria
+python ev-run.py
+# Output: evaluation_results.csv
 ```
 
 Test API connectivity:
